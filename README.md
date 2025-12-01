@@ -1,6 +1,6 @@
 # Gemini Omni-Suite
 
-> **Version:** 1.1.0  
+> **Version:** 1.2.0  
 > **Status:** Stable  
 > **Engine:** Google Gemini 2.5 (Flash, Flash Image, Live API)
 
@@ -20,23 +20,25 @@ Gemini Omni-Suite is a next-generation multi-modal AI workspace designed to demo
 **Model:** `gemini-2.5-flash`
 
 *   **Functionality**: Analyzes raw email text to determine category (Urgent, Important, Social), priority level, and extracts key action items. It automatically drafts professional responses for urgent inquiries.
+*   **UI Highlights**: Features a **Visual Folder Indicator** that color-codes the analysis result (e.g., Red for Urgent, Green for Personal) for instant recognition.
 *   **Walkthrough**:
     1.  Navigate to the **Email Agent** tab.
     2.  Paste raw email content into the left-hand glass panel.
     3.  Click the **Analyze Email** button.
-    4.  Review the **Intelligence Report** on the right, which highlights the recommended folder and drafted response.
+    4.  Review the **Intelligence Report** on the right, noting the color-coded **Recommended Action** card and the drafted response.
 *   **Visual Reference**:
     > ![Email Agent Screenshot](docs/screenshots/email_agent_demo.png)  
-    > *Description: Split-screen view showing raw input on the left and structured Markdown analysis on the right.*
+    > *Description: Split-screen view showing raw input on the left and structured analysis with visual folder indicators on the right.*
 
 ### 2. Magic Image Editor
 **Model:** `gemini-2.5-flash-image`
 
 *   **Functionality**: Allows users to modify existing images using natural language prompts and download the results.
+*   **UI Highlights**: Includes a **Quick Actions** bar with preset styles (e.g., "Cyberpunk", "Sketch") to instantly populate prompts.
 *   **Walkthrough**:
     1.  Navigate to the **Image Editor** tab.
     2.  Click the "Original Source" area to **upload an image** (JPG/PNG).
-    3.  Type a creative prompt in the bottom bar (e.g., *"Add a futuristic neon city background"*).
+    3.  Type a prompt manually OR click a **Quick Action** chip (e.g., *Cyberpunk neon style*) to auto-fill the prompt.
     4.  Click **Generate**.
     5.  The AI-edited version appears in the "Generated Result" panel.
     6.  Click the **Download** button in the header of the result panel to save the edited image.
@@ -48,10 +50,11 @@ Gemini Omni-Suite is a next-generation multi-modal AI workspace designed to demo
 **Model:** `gemini-2.5-flash-native-audio-preview`
 
 *   **Functionality**: A real-time voice interface that uses the Live API for continuous, interruptible conversation.
+*   **UI Highlights**: Features an advanced **Audio Visualizer** with pill-shaped bars and a gentle "idle wave" animation when the user is silent.
 *   **Walkthrough**:
     1.  Navigate to the **Live Voice** tab.
     2.  Click the central **Microphone** button to initiate the WebSocket connection.
-    3.  Speak naturally to the AI. The visualizer bars will react to the model's voice output.
+    3.  Speak naturally to the AI. The visualizer bars will react dynamically to the audio frequencies.
     4.  Tap the button again to disconnect the session.
 *   **Visual Reference**:
     > ![Voice Assistant Screenshot](docs/screenshots/voice_assistant_demo.png)  
@@ -85,7 +88,7 @@ The quality assurance strategy follows a pyramid approach, ensuring reliability 
 | ID | User Flow | Test Steps | Expected Result |
 |:---|:---|:---|:---|
 | **E2E-01** | Theme Switching | 1. Open App<br>2. Check background color<br>3. Click "Light Mode"<br>4. Check background color | Root class changes; Background gradient updates to Light Mode values |
-| **E2E-02** | Full Image Workflow | 1. Go to Image Editor<br>2. Upload `test.png`<br>3. Type "Make it blue"<br>4. Click Generate<br>5. Click Download | Loader appears; Generated image renders; Download is triggered. |
+| **E2E-02** | Full Image Workflow | 1. Go to Image Editor<br>2. Upload `test.png`<br>3. Select "Sketch" Quick Action<br>4. Click Generate<br>5. Click Download | Loader appears; Generated image renders; Download is triggered. |
 | **E2E-03** | Navigation | 1. Click Email Agent<br>2. Click Voice Assistant | URL or View State updates; Voice Component mounts correctly |
 
 ### 4. System Integration Testing (SIT)
@@ -100,8 +103,8 @@ The quality assurance strategy follows a pyramid approach, ensuring reliability 
 
 | ID | User Story | Acceptance Criteria | Notes |
 |:---|:---|:---|:---|
-| **US-01** | *As a professional, I want to categorize emails so I can prioritize.* | Result must explicitly state "Category: Urgent/Important". | Critical Feature |
-| **US-02** | *As a user, I want to edit images without Photoshop skills.* | I can simply type "Remove background" and get a result. | |
+| **US-01** | *As a professional, I want to categorize emails so I can prioritize.* | Result must explicitly state "Category: Urgent/Important" with visual indicator. | Critical Feature |
+| **US-02** | *As a user, I want to edit images without Photoshop skills.* | I can simply type "Remove background" or click a preset and get a result. | |
 | **US-03** | *As a user, I want a dark mode interface.* | App must default to Dark Mode; Toggle must persist pref in LocalStorage. | Verified |
 | **US-04** | *As a user, I want to save the edited images.* | Clicking "Download" saves the file to the local device with the correct extension. | Added in v1.1.0 |
 
@@ -131,6 +134,12 @@ The quality assurance strategy follows a pyramid approach, ensuring reliability 
 ---
 
 ## 📅 Changelog
+
+### v1.2.0
+- **Feature (Image Editor)**: Added "Quick Action" chips for one-click prompt presets (e.g., Cyberpunk, Sketch).
+- **UX (Email Agent)**: Added visual folder indicators (color-coded cards) to the analysis result for better readability.
+- **Visuals (Voice Assistant)**: Upgraded audio visualizer with smoother "pill" bars and a gentle sine-wave idle animation.
+- **Polish**: General improvements to glassmorphism effects in Light Mode.
 
 ### v1.1.0
 - **Feature**: Added image download capability to Image Editor.

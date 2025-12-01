@@ -1,6 +1,6 @@
 {
   "name": "gemini-omni-suite",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "A multi-modal AI workspace featuring Email Agent, Image Editor, and Live Voice Assistant powered by Gemini 2.5.",
   "main": "index.html",
   "scripts": {
