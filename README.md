@@ -114,6 +114,9 @@ The quality assurance strategy follows a pyramid approach, ensuring reliability 
 ├── index.html           # Root HTML, Tailwind Config, Glass styles
 ├── index.tsx            # React Entry Point
 ├── App.tsx              # Main Layout & Routing
+├── metadata.json        # App Metadata & Permissions
+├── package.json         # Project Dependencies & Scripts
+├── WALKTHROUGH.md       # Test Execution Report
 ├── constants.ts         # System Prompts & Model IDs
 ├── types.ts             # TypeScript Interfaces
 ├── components/
@@ -124,3 +127,16 @@ The quality assurance strategy follows a pyramid approach, ensuring reliability 
     ├── geminiService.ts # SDK Implementation
     └── audioUtils.ts    # PCM Encoding/Decoding
 ```
+
+---
+
+## 📅 Changelog
+
+### v1.1.0
+- **Feature**: Added image download capability to Image Editor.
+- **Documentation**: Added `WALKTHROUGH.md` for test reporting.
+- **Config**: Added `package.json` and standard Git configuration.
+
+### v1.0.0
+- **Initial Release**: Core functionality for Email Agent, Image Editor, and Voice Assistant.
+- **UI**: Glassmorphism design with Dark/Light mode support.
