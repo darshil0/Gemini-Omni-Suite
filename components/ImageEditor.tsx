@@ -17,6 +17,11 @@ const ImageEditor: React.FC = () => {
         setGeneratedImage(null); // Reset generated on new upload
       };
       reader.readAsDataURL(file);
+      
+      // Reset input value to allow selecting the same file again if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 

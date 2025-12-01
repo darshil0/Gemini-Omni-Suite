@@ -34,13 +34,23 @@ const VoiceAssistant: React.FC = () => {
 
   const startSession = async () => {
     try {
+      if (status === 'connecting' || active) return;
+      
       setStatus('connecting');
       setErrorMessage(null);
 
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) {
+        throw new Error("Web Audio API not supported in this browser");
+      }
+
       const inputCtx = new AudioContextClass({ sampleRate: 16000 });
       const outputCtx = new AudioContextClass({ sampleRate: 24000 });
       
+      // Ensure contexts are running (needed for some browsers policy)
+      if (inputCtx.state === 'suspended') await inputCtx.resume();
+      if (outputCtx.state === 'suspended') await outputCtx.resume();
+
       inputContextRef.current = inputCtx;
       audioContextRef.current = outputCtx;
 
@@ -80,33 +90,40 @@ const VoiceAssistant: React.FC = () => {
             processor.connect(inputCtx.destination);
           },
           onmessage: async (message: LiveServerMessage) => {
+            const ctx = audioContextRef.current;
+            // Safety check: if context is closed or missing, stop processing
+            if (!ctx || ctx.state === 'closed') return;
+
             const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
             
-            if (base64Audio && audioContextRef.current) {
-               const ctx = audioContextRef.current;
-               nextStartTimeRef.current = Math.max(nextStartTimeRef.current, ctx.currentTime);
+            if (base64Audio) {
+               try {
+                   nextStartTimeRef.current = Math.max(nextStartTimeRef.current, ctx.currentTime);
 
-               const audioData = base64ToUint8Array(base64Audio);
-               const audioBuffer = await decodeAudioData(audioData, ctx, 24000, 1);
-               
-               const sourceNode = ctx.createBufferSource();
-               sourceNode.buffer = audioBuffer;
-               
-               if (analyserRef.current) {
-                 sourceNode.connect(analyserRef.current);
-                 analyserRef.current.connect(ctx.destination);
-               } else {
-                 sourceNode.connect(ctx.destination);
+                   const audioData = base64ToUint8Array(base64Audio);
+                   const audioBuffer = await decodeAudioData(audioData, ctx, 24000, 1);
+                   
+                   const sourceNode = ctx.createBufferSource();
+                   sourceNode.buffer = audioBuffer;
+                   
+                   if (analyserRef.current) {
+                     sourceNode.connect(analyserRef.current);
+                     analyserRef.current.connect(ctx.destination);
+                   } else {
+                     sourceNode.connect(ctx.destination);
+                   }
+
+                   sourceNode.addEventListener('ended', () => {
+                     scheduledSourcesRef.current.delete(sourceNode);
+                   });
+
+                   sourceNode.start(nextStartTimeRef.current);
+                   scheduledSourcesRef.current.add(sourceNode);
+                   
+                   nextStartTimeRef.current += audioBuffer.duration;
+               } catch (e) {
+                   console.error("Error decoding/playing audio chunk", e);
                }
-
-               sourceNode.addEventListener('ended', () => {
-                 scheduledSourcesRef.current.delete(sourceNode);
-               });
-
-               sourceNode.start(nextStartTimeRef.current);
-               scheduledSourcesRef.current.add(sourceNode);
-               
-               nextStartTimeRef.current += audioBuffer.duration;
             }
 
             if (message.serverContent?.interrupted) {
@@ -120,7 +137,11 @@ const VoiceAssistant: React.FC = () => {
           },
           onclose: () => {
             console.log('Gemini Live Connection Closed');
-            if (status !== 'disconnected') stopSession();
+            // Only call stopSession if we haven't already explicitly stopped (status check)
+            if (status !== 'disconnected') {
+                setStatus('disconnected');
+                setActive(false);
+            }
           },
           onerror: (e) => {
             console.error('Gemini Live Error', e);
@@ -161,20 +182,36 @@ const VoiceAssistant: React.FC = () => {
       streamRef.current = null;
     }
 
-    if (sourceRef.current) sourceRef.current.disconnect();
+    if (sourceRef.current) {
+        try { sourceRef.current.disconnect(); } catch(e) {}
+        sourceRef.current = null;
+    }
+    
     if (processorRef.current) {
-        processorRef.current.disconnect();
-        processorRef.current.onaudioprocess = null;
+        try { 
+            processorRef.current.disconnect();
+            processorRef.current.onaudioprocess = null;
+        } catch(e) {}
+        processorRef.current = null;
     }
 
-    if (inputContextRef.current) inputContextRef.current.close();
-    if (audioContextRef.current) audioContextRef.current.close();
+    if (inputContextRef.current) {
+        try { inputContextRef.current.close(); } catch(e) {}
+        inputContextRef.current = null;
+    }
+    
+    if (audioContextRef.current) {
+        try { audioContextRef.current.close(); } catch(e) {}
+        audioContextRef.current = null;
+    }
 
     nextStartTimeRef.current = 0;
     scheduledSourcesRef.current.clear();
   };
 
   const toggleSession = () => {
+    if (status === 'connecting') return;
+    
     if (active) {
       stopSession();
     } else {
@@ -214,9 +251,23 @@ const VoiceAssistant: React.FC = () => {
             // Draw rounded bars
             ctx.fillStyle = gradient;
             
-            // Draw top rounded rect manually or use roundRect if supported, simpler rect for now with radius logic
+            // Manual rounded rect implementation for cross-browser compatibility
+            const y = (canvas.height - barHeight) / 2;
+            const radius = 5;
+            const width = barWidth;
+            const height = Math.max(barHeight, radius * 2); // Ensure it's at least as tall as radius
+
             ctx.beginPath();
-            ctx.roundRect(x, (canvas.height - barHeight) / 2, barWidth, barHeight, 5); 
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
             ctx.fill();
 
             x += barWidth + 4; // spacing
@@ -264,10 +315,13 @@ const VoiceAssistant: React.FC = () => {
             <div className="flex flex-col items-center gap-6">
                 <button
                     onClick={toggleSession}
+                    disabled={status === 'connecting'}
                     className={`group relative w-28 h-28 rounded-full flex items-center justify-center transition-all duration-500 ${
                         active 
                         ? 'bg-red-500 shadow-[0_0_50px_rgba(239,68,68,0.4)] scale-110' 
-                        : 'bg-white shadow-[0_0_30px_rgba(0,0,0,0.1)] hover:scale-105 hover:shadow-[0_0_40px_rgba(0,0,0,0.15)] dark:shadow-[0_0_30px_rgba(255,255,255,0.1)] dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]'
+                        : status === 'connecting' 
+                            ? 'bg-gray-100 dark:bg-gray-800 scale-100 cursor-not-allowed'
+                            : 'bg-white shadow-[0_0_30px_rgba(0,0,0,0.1)] hover:scale-105 hover:shadow-[0_0_40px_rgba(0,0,0,0.15)] dark:shadow-[0_0_30px_rgba(255,255,255,0.1)] dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]'
                     }`}
                 >
                     {active && (
@@ -277,7 +331,7 @@ const VoiceAssistant: React.FC = () => {
                     {active ? (
                         <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-md"><rect x="6" y="4" width="4" height="16" rx="2" /><rect x="14" y="4" width="4" height="16" rx="2" /></svg>
                     ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={status === 'connecting' ? 'gray' : 'black'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
                     )}
                 </button>
 
