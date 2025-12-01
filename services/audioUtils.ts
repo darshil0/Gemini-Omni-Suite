@@ -26,7 +26,7 @@ export function createPcmBlob(data: Float32Array): GenAIBlob {
   for (let i = 0; i < l; i++) {
     // Clamp values to [-1, 1] before scaling
     const s = Math.max(-1, Math.min(1, data[i]));
-    int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    int16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
   }
   return {
     data: arrayBufferToBase64(new Uint8Array(int16.buffer)),

@@ -1,7 +1,7 @@
 export enum AppView {
   EMAIL_AGENT = 'EMAIL_AGENT',
   IMAGE_EDITOR = 'IMAGE_EDITOR',
-  VOICE_ASSISTANT = 'VOICE_ASSISTANT'
+  VOICE_ASSISTANT = 'VOICE_ASSISTANT',
 }
 
 export interface EmailAnalysisResult {

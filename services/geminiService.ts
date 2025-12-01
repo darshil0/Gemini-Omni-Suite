@@ -1,10 +1,10 @@
-import { GoogleGenAI } from "@google/genai";
-import { EMAIL_SYSTEM_PROMPT, MODEL_IDS } from "../constants";
+import { GoogleGenAI } from '@google/genai';
+import { EMAIL_SYSTEM_PROMPT, MODEL_IDS } from '../constants';
 
 // Initialize AI Client
 const getAiClient = () => {
   if (!process.env.API_KEY) {
-    throw new Error("API_KEY environment variable is missing");
+    throw new Error('API_KEY environment variable is missing');
   }
   return new GoogleGenAI({ apiKey: process.env.API_KEY });
 };
@@ -21,9 +21,9 @@ export const analyzeEmail = async (emailContent: string): Promise<string> => {
         temperature: 0.3, // Lower temperature for more consistent classification
       },
     });
-    return response.text || "No analysis generated.";
+    return response.text || 'No analysis generated.';
   } catch (error) {
-    console.error("Email analysis failed:", error);
+    console.error('Email analysis failed:', error);
     throw error;
   }
 };
@@ -59,13 +59,15 @@ export const editImage = async (
     // Extract the image from the response
     for (const part of response.candidates?.[0]?.content?.parts || []) {
       if (part.inlineData && part.inlineData.data) {
-        return `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`;
+        return `data:${part.inlineData.mimeType || 'image/png'};base64,${
+          part.inlineData.data
+        }`;
       }
     }
-    
-    throw new Error("No image generated in response");
+
+    throw new Error('No image generated in response');
   } catch (error) {
-    console.error("Image editing failed:", error);
+    console.error('Image editing failed:', error);
     throw error;
   }
 };

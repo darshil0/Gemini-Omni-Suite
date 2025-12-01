@@ -48,5 +48,5 @@ DRAFT RESPONSE (if applicable)
 export const MODEL_IDS = {
   TEXT: 'gemini-2.5-flash',
   IMAGE: 'gemini-2.5-flash-image',
-  AUDIO: 'gemini-2.5-flash-native-audio-preview-09-2025'
+  AUDIO: 'gemini-2.5-flash-native-audio-preview-09-2025',
 };
