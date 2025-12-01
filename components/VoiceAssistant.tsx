@@ -226,66 +226,87 @@ const VoiceAssistant: React.FC = () => {
     const draw = () => {
       const canvas = canvasRef.current;
       const analyser = analyserRef.current;
+      const time = performance.now() / 1000;
       
-      if (canvas && analyser && active) {
+      if (canvas) {
         const ctx = canvas.getContext('2d');
         if (ctx) {
-          const bufferLength = analyser.frequencyBinCount;
-          const dataArray = new Uint8Array(bufferLength);
-          analyser.getByteFrequencyData(dataArray);
-
           ctx.clearRect(0, 0, canvas.width, canvas.height);
-          
-          // Center the drawing
-          const barWidth = (canvas.width / bufferLength) * 0.8;
-          let x = (canvas.width - (bufferLength * barWidth + (bufferLength - 1) * 2)) / 2;
 
-          for(let i = 0; i < bufferLength; i++) {
-            const barHeight = (dataArray[i] / 255) * canvas.height * 0.8;
+          if (active && analyser) {
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteFrequencyData(dataArray);
+
+            // Center the drawing
+            const barWidth = (canvas.width / bufferLength) * 0.8;
+            let x = (canvas.width - (bufferLength * barWidth + (bufferLength - 1) * 2)) / 2;
+
+            for(let i = 0; i < bufferLength; i++) {
+              const barHeight = (dataArray[i] / 255) * canvas.height * 0.8;
+              
+              // Modern gradient for bars
+              const gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
+              gradient.addColorStop(0, '#3b82f6');
+              gradient.addColorStop(1, '#8b5cf6');
+
+              // Draw rounded bars (pill shape)
+              ctx.fillStyle = gradient;
+              
+              const y = (canvas.height - barHeight) / 2;
+              // Use half width as radius for perfectly round caps
+              const width = barWidth;
+              const radius = width / 2; 
+              const height = Math.max(barHeight, width); // Ensure it's at least a circle
+
+              ctx.beginPath();
+              ctx.moveTo(x + radius, y);
+              ctx.lineTo(x + width - radius, y);
+              ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+              ctx.lineTo(x + width, y + height - radius);
+              ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+              ctx.lineTo(x + radius, y + height);
+              ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+              ctx.lineTo(x, y + radius);
+              ctx.quadraticCurveTo(x, y, x + radius, y);
+              ctx.closePath();
+              ctx.fill();
+
+              x += barWidth + 4; // spacing
+            }
+          } else {
+            // Idle Animation: Pulsing Sine Wave
+            const isDark = document.documentElement.classList.contains('dark');
+            ctx.strokeStyle = isDark ? 'rgba(96, 165, 250, 0.4)' : 'rgba(37, 99, 235, 0.3)';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
             
-            // Modern gradient for bars
-            const gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
-            gradient.addColorStop(0, '#3b82f6');
-            gradient.addColorStop(1, '#8b5cf6');
-
-            // Draw rounded bars
-            ctx.fillStyle = gradient;
-            
-            // Manual rounded rect implementation for cross-browser compatibility
-            const y = (canvas.height - barHeight) / 2;
-            const radius = 5;
-            const width = barWidth;
-            const height = Math.max(barHeight, radius * 2); // Ensure it's at least as tall as radius
-
             ctx.beginPath();
-            ctx.moveTo(x + radius, y);
-            ctx.lineTo(x + width - radius, y);
-            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-            ctx.lineTo(x + width, y + height - radius);
-            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-            ctx.lineTo(x + radius, y + height);
-            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-            ctx.lineTo(x, y + radius);
-            ctx.quadraticCurveTo(x, y, x + radius, y);
-            ctx.closePath();
-            ctx.fill();
+            
+            // Draw a compound sine wave
+            for (let i = 0; i < canvas.width; i++) {
+              // Taper at the ends (0 to 1 to 0)
+              const normalizedX = i / canvas.width;
+              const taper = Math.sin(normalizedX * Math.PI);
+              
+              // Combine two sine waves for organic movement
+              const y = (canvas.height / 2) + 
+                        (Math.sin(i * 0.02 + time * 3) * 5 + 
+                         Math.sin(i * 0.05 - time * 1.5) * 3) * taper;
+              
+              if (i === 0) ctx.moveTo(i, y);
+              else ctx.lineTo(i, y);
+            }
+            ctx.stroke();
 
-            x += barWidth + 4; // spacing
+            // Add a subtle glow
+            ctx.shadowColor = isDark ? '#60a5fa' : '#3b82f6';
+            ctx.shadowBlur = 10;
+            ctx.stroke();
+            ctx.shadowBlur = 0; // Reset
           }
         }
-      } else if (canvas && !active) {
-         const ctx = canvas.getContext('2d');
-         ctx?.clearRect(0, 0, canvas.width, canvas.height);
-         
-         // Draw idle line
-         if (ctx) {
-             ctx.strokeStyle = document.documentElement.classList.contains('dark') ? '#374151' : '#cbd5e1';
-             ctx.lineWidth = 2;
-             ctx.beginPath();
-             ctx.moveTo(0, canvas.height / 2);
-             ctx.lineTo(canvas.width, canvas.height / 2);
-             ctx.stroke();
-         }
       }
       animationId = requestAnimationFrame(draw);
     };
