@@ -29,7 +29,8 @@ const VoiceAssistant: React.FC = () => {
 
   // Visualizer Ref
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
+  const outputAnalyserRef = useRef<AnalyserNode | null>(null); // For AI Audio
+  const inputAnalyserRef = useRef<AnalyserNode | null>(null); // For User Audio
 
   useEffect(() => {
     return () => {
@@ -61,16 +62,25 @@ const VoiceAssistant: React.FC = () => {
       inputContextRef.current = inputCtx;
       audioContextRef.current = outputCtx;
 
-      const analyser = outputCtx.createAnalyser();
-      analyser.fftSize = 64; // Smoother visualizer with fewer bars
-      analyser.smoothingTimeConstant = 0.8;
-      analyserRef.current = analyser;
+      // Setup AI Output Analyser
+      const outAnalyser = outputCtx.createAnalyser();
+      outAnalyser.fftSize = 64;
+      outAnalyser.smoothingTimeConstant = 0.8;
+      outputAnalyserRef.current = outAnalyser;
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
       const source = inputCtx.createMediaStreamSource(stream);
       sourceRef.current = source;
+
+      // Setup User Input Analyser (Visual only)
+      const inAnalyser = inputCtx.createAnalyser();
+      inAnalyser.fftSize = 64;
+      inAnalyser.smoothingTimeConstant = 0.8;
+      inputAnalyserRef.current = inAnalyser;
+      // Connect source to analyser (but NOT to destination to avoid feedback)
+      source.connect(inAnalyser);
 
       const processor = inputCtx.createScriptProcessor(4096, 1, 1);
       processorRef.current = processor;
@@ -122,9 +132,9 @@ const VoiceAssistant: React.FC = () => {
                 const sourceNode = ctx.createBufferSource();
                 sourceNode.buffer = audioBuffer;
 
-                if (analyserRef.current) {
-                  sourceNode.connect(analyserRef.current);
-                  analyserRef.current.connect(ctx.destination);
+                if (outputAnalyserRef.current) {
+                  sourceNode.connect(outputAnalyserRef.current);
+                  outputAnalyserRef.current.connect(ctx.destination);
                 } else {
                   sourceNode.connect(ctx.destination);
                 }
@@ -251,7 +261,8 @@ const VoiceAssistant: React.FC = () => {
 
     const draw = () => {
       const canvas = canvasRef.current;
-      const analyser = analyserRef.current;
+      const outAnalyser = outputAnalyserRef.current;
+      const inAnalyser = inputAnalyserRef.current;
       const time = performance.now() / 1000;
 
       if (canvas) {
@@ -259,10 +270,14 @@ const VoiceAssistant: React.FC = () => {
         if (ctx) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-          if (active && analyser) {
-            const bufferLength = analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
-            analyser.getByteFrequencyData(dataArray);
+          if (active && outAnalyser && inAnalyser) {
+            const bufferLength = outAnalyser.frequencyBinCount;
+
+            const outData = new Uint8Array(bufferLength);
+            outAnalyser.getByteFrequencyData(outData);
+
+            const inData = new Uint8Array(bufferLength);
+            inAnalyser.getByteFrequencyData(inData);
 
             // Center the drawing
             const barWidth = (canvas.width / bufferLength) * 0.8;
@@ -272,7 +287,9 @@ const VoiceAssistant: React.FC = () => {
               2;
 
             for (let i = 0; i < bufferLength; i++) {
-              const barHeight = (dataArray[i] / 255) * canvas.height * 0.8;
+              // Combine input and output data (Max) for responsiveness to both
+              const val = Math.max(outData[i], inData[i]);
+              const barHeight = (val / 255) * canvas.height * 0.8;
 
               // Modern gradient for bars
               const gradient = ctx.createLinearGradient(
@@ -288,7 +305,6 @@ const VoiceAssistant: React.FC = () => {
               ctx.fillStyle = gradient;
 
               const y = (canvas.height - barHeight) / 2;
-              // Use half width as radius for perfectly round caps
               const width = barWidth;
               const radius = width / 2;
               const height = Math.max(barHeight, width); // Ensure it's at least a circle

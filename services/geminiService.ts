@@ -65,6 +65,14 @@ export const editImage = async (
       }
     }
 
+    // If no image is found, check for a text response (e.g., refusal)
+    const textPart = response.candidates?.[0]?.content?.parts?.find(
+      (p) => p.text
+    );
+    if (textPart && textPart.text) {
+      throw new Error(textPart.text);
+    }
+
     throw new Error('No image generated in response');
   } catch (error) {
     console.error('Image editing failed:', error);
