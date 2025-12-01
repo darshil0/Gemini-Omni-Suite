@@ -1,0 +1,7 @@
+{
+  "name": "Gemini Omni-Suite",
+  "description": "A multi-modal AI workspace featuring an Intelligent Email Agent, Generative Image Editor, and Real-time Voice Assistant powered by Gemini 2.5.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
