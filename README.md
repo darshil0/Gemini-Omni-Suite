@@ -1,6 +1,6 @@
 # Gemini Omni-Suite
 
-> **Version:** 1.0.0  
+> **Version:** 1.1.0  
 > **Status:** Stable  
 > **Engine:** Google Gemini 2.5 (Flash, Flash Image, Live API)
 
@@ -32,13 +32,14 @@ Gemini Omni-Suite is a next-generation multi-modal AI workspace designed to demo
 ### 2. Magic Image Editor
 **Model:** `gemini-2.5-flash-image`
 
-*   **Functionality**: Allows users to modify existing images using natural language prompts.
+*   **Functionality**: Allows users to modify existing images using natural language prompts and download the results.
 *   **Walkthrough**:
     1.  Navigate to the **Image Editor** tab.
     2.  Click the "Original Source" area to **upload an image** (JPG/PNG).
     3.  Type a creative prompt in the bottom bar (e.g., *"Add a futuristic neon city background"*).
     4.  Click **Generate**.
     5.  The AI-edited version appears in the "Generated Result" panel.
+    6.  Click the **Download** button in the header of the result panel to save the edited image.
 *   **Visual Reference**:
     > ![Image Editor Screenshot](docs/screenshots/image_editor_demo.png)  
     > *Description: Side-by-side comparison of the uploaded image and the AI-transformed result.*
@@ -84,7 +85,7 @@ The quality assurance strategy follows a pyramid approach, ensuring reliability 
 | ID | User Flow | Test Steps | Expected Result |
 |:---|:---|:---|:---|
 | **E2E-01** | Theme Switching | 1. Open App<br>2. Check background color<br>3. Click "Light Mode"<br>4. Check background color | Root class changes; Background gradient updates to Light Mode values |
-| **E2E-02** | Full Image Workflow | 1. Go to Image Editor<br>2. Upload `test.png`<br>3. Type "Make it blue"<br>4. Click Generate | Loader appears; Generated image eventually renders in right panel |
+| **E2E-02** | Full Image Workflow | 1. Go to Image Editor<br>2. Upload `test.png`<br>3. Type "Make it blue"<br>4. Click Generate<br>5. Click Download | Loader appears; Generated image renders; Download is triggered. |
 | **E2E-03** | Navigation | 1. Click Email Agent<br>2. Click Voice Assistant | URL or View State updates; Voice Component mounts correctly |
 
 ### 4. System Integration Testing (SIT)
@@ -102,6 +103,7 @@ The quality assurance strategy follows a pyramid approach, ensuring reliability 
 | **US-01** | *As a professional, I want to categorize emails so I can prioritize.* | Result must explicitly state "Category: Urgent/Important". | Critical Feature |
 | **US-02** | *As a user, I want to edit images without Photoshop skills.* | I can simply type "Remove background" and get a result. | |
 | **US-03** | *As a user, I want a dark mode interface.* | App must default to Dark Mode; Toggle must persist pref in LocalStorage. | Verified |
+| **US-04** | *As a user, I want to save the edited images.* | Clicking "Download" saves the file to the local device with the correct extension. | Added in v1.1.0 |
 
 ---
 
