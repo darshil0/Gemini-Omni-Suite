@@ -42,6 +42,23 @@ const ImageEditor: React.FC = () => {
     }
   };
 
+  const handleDownload = () => {
+    if (!generatedImage) return;
+    
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.href = generatedImage;
+    
+    // Extract extension from mime type for the filename
+    const mimeType = generatedImage.match(/data:([^;]+);/)?.[1] || 'image/png';
+    const extension = mimeType.split('/')[1] || 'png';
+    link.download = `gemini-edited.${extension}`;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="h-full p-6 lg:p-8 flex flex-col gap-6 overflow-y-auto">
       {/* Header */}
@@ -112,6 +129,15 @@ const ImageEditor: React.FC = () => {
                  <div className="w-2 h-6 rounded-full bg-gradient-to-b from-purple-500 to-indigo-500"></div>
                  <h3 className="font-semibold text-gray-800 dark:text-gray-200">Generated Result</h3>
              </div>
+             {generatedImage && (
+                <button 
+                    onClick={handleDownload}
+                    className="text-xs glass-button text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    Download
+                </button>
+             )}
           </div>
 
           <div className="flex-1 min-h-[300px] bg-gray-100/50 dark:bg-gray-900/50 rounded-xl flex items-center justify-center overflow-hidden border border-gray-200 dark:border-white/5 relative shadow-inner">
