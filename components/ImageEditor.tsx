@@ -8,6 +8,16 @@ const ImageEditor: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const presetPrompts = [
+    "Cyberpunk neon style",
+    "Pencil sketch",
+    "Watercolor painting",
+    "Vintage 1950s photo",
+    "Professional studio lighting",
+    "Cinematic 4k render",
+    "Make it snowy"
+  ];
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -164,32 +174,52 @@ const ImageEditor: React.FC = () => {
       </div>
 
       {/* Controls */}
-      <div className="glass-panel p-5 rounded-2xl flex flex-col md:flex-row gap-4 items-center shadow-2xl relative z-10">
-        <div className="flex-1 w-full relative">
-           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="gray" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-           </div>
-           <input
-            type="text"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder='Describe your edit (e.g., "Add a retro filter", "Remove background", "Make it snowy")'
-            className="w-full bg-white dark:bg-black/20 border border-gray-300 dark:border-white/10 rounded-xl pl-11 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all font-medium"
-            onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
-          />
+      <div className="glass-panel p-5 rounded-2xl flex flex-col gap-4 shadow-2xl relative z-10">
+        
+        {/* Presets */}
+        <div className="flex flex-wrap gap-2 items-center">
+             <div className="flex items-center gap-2 mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-500"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Quick Actions:</span>
+             </div>
+             {presetPrompts.map((p) => (
+                <button 
+                    key={p}
+                    onClick={() => setPrompt(p)}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-white/5 hover:bg-purple-100 dark:hover:bg-purple-500/20 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-200 transition-all border border-gray-200 dark:border-white/10 hover:border-purple-200 dark:hover:border-purple-500/30 whitespace-nowrap"
+                >
+                    {p}
+                </button>
+             ))}
         </div>
-        <button
-          onClick={handleGenerate}
-          disabled={loading || !selectedImage || !prompt}
-          className={`h-[56px] px-8 rounded-xl font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-            loading || !selectedImage || !prompt
-              ? 'bg-gray-200 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 cursor-not-allowed border border-gray-300 dark:border-white/5'
-              : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-900/40 hover:shadow-purple-900/60 transform hover:-translate-y-0.5'
-          }`}
-        >
-          <span>Generate</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </button>
+
+        <div className="flex flex-col md:flex-row gap-4 items-center w-full">
+            <div className="flex-1 w-full relative">
+               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="gray" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+               </div>
+               <input
+                type="text"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder='Describe your edit (e.g., "Add a retro filter", "Remove background", "Make it snowy")'
+                className="w-full bg-white dark:bg-black/20 border border-gray-300 dark:border-white/10 rounded-xl pl-11 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all font-medium"
+                onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
+              />
+            </div>
+            <button
+              onClick={handleGenerate}
+              disabled={loading || !selectedImage || !prompt}
+              className={`h-[56px] px-8 rounded-xl font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
+                loading || !selectedImage || !prompt
+                  ? 'bg-gray-200 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 cursor-not-allowed border border-gray-300 dark:border-white/5'
+                  : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-900/40 hover:shadow-purple-900/60 transform hover:-translate-y-0.5'
+              }`}
+            >
+              <span>Generate</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </button>
+        </div>
       </div>
     </div>
   );
